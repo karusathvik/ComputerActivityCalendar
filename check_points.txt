@@ -1,0 +1,25 @@
+CHECKPOINTS
+
+Checkpoint 1:
+I can capture what is on my computer.
+
+Checkpoint 2:
+I can extract useful text.
+
+Checkpoint 3:
+My desktop client can talk to my backend.
+
+Checkpoint 4:
+My backend can classify an activity.
+
+Checkpoint 5:
+Ambiguous observations trigger vision.
+
+Checkpoint 6:
+Activities become persistent sessions.
+
+Checkpoint 7:
+My web UI displays those sessions.
+
+Checkpoint 8:
+I can actually use DayTrack for an hour.

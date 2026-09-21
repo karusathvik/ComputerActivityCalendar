@@ -1,0 +1,9 @@
+
+- Gray scale to reduce image process (done)
+- Before offloading to ocr / LLM, can just ask apple's toolkit
+    to check what application is on the forefront and if its 
+    something productive like VScode, pycharm, then we do not 
+    have to proceed much more but if its like google, safari
+    we need to check what is google using
+
+- check forefront vs if the application beign used is in the back
