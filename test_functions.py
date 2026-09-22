@@ -64,11 +64,7 @@ def get_frontmost_info():
     end tell
     '''
 
-    result = subprocess.run(
-        ["osascript", "-e", script],
-        capture_output=True,
-        text=True
-    )
+    result = subprocess.run(["osascript", "-e", script], capture_output=True, text=True)
 
     app, title = result.stdout.strip().split("|||", 1)
 
@@ -81,12 +77,20 @@ app, title = get_frontmost_info()
 import time 
 
 start = time.time()
-
+'''
 for i in range(10):
     time.sleep(3)
     app, title = get_frontmost_info()
     print("App:", app)
     print("Window:", title)
-
-
+'''
+ 
  #with this, i could just return {"App" : app, "Window" : title} in a json like format 
+
+
+
+from DesktopAgent.DesktopInfo import DesktopInfo
+
+tmp = DesktopInfo()
+res = tmp.sample_frontmost_info_n(10, 1)
+print(res)
