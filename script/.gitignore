@@ -4,5 +4,4 @@ records/
 activities-data.js
 collector.pid
 collector.lock
-collector.log
 .DS_Store
