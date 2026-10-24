@@ -40,7 +40,7 @@ public class ConnectionDB {
         catch (Exception e) {
             //tdlr error handling later , typically return a value so we can set a response code in the main function
             status = 1;
-            e.printStackTrace();
+            throw new SQLException("Unable to query activities", e);
         }
         return jsonArray;
 

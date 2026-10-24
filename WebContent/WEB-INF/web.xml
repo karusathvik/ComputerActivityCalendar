@@ -4,7 +4,7 @@
          version="3.1">
     <display-name>activity_tracker</display-name>
     <welcome-file-list>
-        <welcome-file>index.html</welcome-file>
+        <welcome-file>display.html</welcome-file>
     </welcome-file-list>
 
     <resource-ref>
