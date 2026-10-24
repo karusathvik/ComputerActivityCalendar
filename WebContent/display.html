@@ -2,23 +2,47 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Your Daily Work</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Activity Calendar</title>
+    <link rel="stylesheet" href="display.css?v=20261024-3">
 </head>
 <body>
-    <h1>Show dates</h1>
-    <form id = "activity-form">
-        <label for="activity-date">Activity Date</label>
-        <input type="date" id="activity-date" name="activity-date">
-        <input type="submit" value="Show Activities"  >
-    </form>
-
-    <h3 id="the-date-info"></h3>
-    <ul id="curr-results"></ul>
-
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-    <script src = "display.js"></script>
-
-    <button type="button" id="prev">Prev Date</button>
-    <button type="button" id ="next">Next Date</button>
+<main>
+    <header class="toolbar">
+        <div><span class="eyebrow">YOUR DAILY WORK</span><h1>Activity Calendar</h1></div>
+        <nav aria-label="Day navigation">
+            <button id="today" type="button">Today</button>
+            <button id="prev" type="button" aria-label="Previous day">‹</button>
+            <button id="next" type="button" aria-label="Next day">›</button>
+        </nav>
+        <form id="activity-form">
+            <label for="activity-date">Date</label>
+            <input type="date" id="activity-date" required>
+            <button type="submit">Apply</button>
+            <button type="button" id="refresh">Refresh</button>
+        </form>
+    </header>
+    <section class="calendar" aria-label="Daily activity calendar">
+        <div class="day-heading"><div><h2 id="the-date-info"></h2><p id="summary"></p></div><span class="badge">Day view</span></div>
+        <div class="status"><span id="refresh-status" role="status">Loading calendar…</span><span id="last-updated"></span></div>
+        <p class="hint">Sampled every 5 minutes · Consecutive samples of the same app are grouped; hover for titles · Durations are estimates · Local time</p>
+        <p id="empty-state" hidden>No activities recorded for this date.</p>
+        <div id="day-scroll" tabindex="0" aria-label="Scrollable 24-hour timeline">
+            <div id="timeline"><div id="hours"></div><div id="events"></div><div id="now-line" hidden></div></div>
+        </div>
+    </section>
+</main>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script>
+window.addEventListener("error", function (event) {
+    const status = document.getElementById("refresh-status");
+    status.classList.add("error");
+    status.textContent = "Calendar could not load. " + (event.message || "Check your connection and reload.");
+});
+if (!window.jQuery) {
+    document.getElementById("refresh-status").textContent = "jQuery could not load. Check your internet connection and reload.";
+}
+</script>
+<script src="display.js?v=20261024-3"></script>
 </body>
 </html>

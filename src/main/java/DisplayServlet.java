@@ -36,6 +36,8 @@ public class DisplayServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException{
         response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        response.setHeader("Cache-Control", "no-store");
         PrintWriter out = response.getWriter();
         String user_id = request.getParameter("user_id"); //prolly should store this in a session or something so that way users cant access others
         String date = request.getParameter("curr_date"); //this should be in the format YYYY-MM-DD
@@ -55,7 +57,7 @@ public class DisplayServlet extends HttpServlet {
         String sdate = day + " 00:00:00";
         String edate = day.plusDays(1) + " 00:00:00";
         try {
-            String query = "SELECT recorded_at, app, title FROM activities WHERE user_id = ? AND recorded_at >= ? AND recorded_at < ?  ORDER BY recorded_at";
+            String query = "SELECT recorded_at, app, title FROM activities WHERE user_id = ? AND recorded_at >= ? AND recorded_at < ?  ORDER BY recorded_at, id";
             String[] params = {user_id, sdate, edate};
             JsonArray result = connectionDB.getJsonArrayFromQuery(query, params);
             out.write(result.toString());

@@ -37,13 +37,18 @@ public class ConnectionDB {
             }
 
         }
-        catch (Exception e) {
-            //tdlr error handling later , typically return a value so we can set a response code in the main function
-            status = 1;
-            throw new SQLException("Unable to query activities", e);
-        }
         return jsonArray;
 
+    }
+
+    //for post methods
+    public int updateFromQuery(String query, String[] params) throws SQLException {
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement(query)) {
+            for (int i = 0; i < params.length; ++i)
+                statement.setString(i + 1, params[i]);
+            return statement.executeUpdate();
+        }
     }
 
 
