@@ -11,14 +11,14 @@ im1 = im1.convert("L") #convert the image to grayscale
 im1.save("irstimage.png") 
 im1.show()
 '''
-      
-#pyobjc allows for python the use of AppKit 
+
+#pyobjc allows for python the use of AppKit
 
 #we are mostly interseted in current screen instead of a split screen so we just care about the frontmost
 
 
 #https://developer.apple.com/documentation/appkit/nsworkspace
-workspace = NSWorkspace.sharedWorkspace() 
+workspace = NSWorkspace.sharedWorkspace()
 arr_of = workspace.runningApplications()
 for app in arr_of:
     if (app.isActive):
@@ -33,7 +33,7 @@ app = workspace.frontmostApplication()
 #print(app.bundleIdentifier())
 fm_pid = app.processIdentifier()
 
-#attempting to accesss the viewing window 
+#attempting to accesss the viewing window
 
 
 '''
@@ -75,7 +75,7 @@ def get_frontmost_info():
 app, title = get_frontmost_info()
 
 
-import time 
+import time
 
 start = time.time()
 '''
@@ -85,13 +85,13 @@ for i in range(10):
     print("App:", app)
     print("Window:", title)
 '''
- 
- #with this, i could just return {"App" : app, "Window" : title} in a json like format 
+
+ #with this, i could just return {"App" : app, "Window" : title} in a json like format
 
 
 
 from DesktopAgent.DesktopInfo import DesktopInfo
 
 tmp = DesktopInfo()
-res = tmp.sample_frontmost_info_n(10, 1)
+res = tmp.sample_frontmost_info_n(1, 1)
 print(res)
