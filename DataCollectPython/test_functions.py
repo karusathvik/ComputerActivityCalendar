@@ -1,6 +1,7 @@
 import pyautogui as pg #https://pyautogui.readthedocs.io/en/latest/screenshot.html#the-locate-functions
 import os, sys
 from PIL import Image #https://pillow.readthedocs.io/en/stable/handbook/overview.html
+from AppKit import NSWorkspace
 
 '''
 im1 = pg.screenshot() #this is a pil object
@@ -15,7 +16,7 @@ im1.show()
 
 #we are mostly interseted in current screen instead of a split screen so we just care about the frontmost
 
-from AppKit import NSWorkspace
+
 #https://developer.apple.com/documentation/appkit/nsworkspace
 workspace = NSWorkspace.sharedWorkspace() 
 arr_of = workspace.runningApplications()
