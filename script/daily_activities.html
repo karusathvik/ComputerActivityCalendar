@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Daily Activities</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f6f8fc;color:#243047;font:14px system-ui,sans-serif}main{max-width:1400px;margin:auto;padding:28px}header,nav,form,.heading,.status{display:flex;align-items:center;gap:12px}header{flex-wrap:wrap;margin-bottom:24px}h1{font-size:26px;margin:5px 24px 5px 0;letter-spacing:-1px}.eyebrow{font-size:10px;letter-spacing:2px;color:#64748b;font-weight:700}form{margin-left:auto}button,input{font:inherit;padding:9px 13px;border:1px solid #d5dce8;border-radius:8px;background:white;color:inherit}button{cursor:pointer}button:hover{background:#eaf0fd}button:focus-visible,input:focus-visible,.event:focus-visible{outline:2px solid #2563eb;outline-offset:2px}.calendar{background:white;border:1px solid #e0e5ee;border-radius:16px;overflow:hidden}.heading{justify-content:space-between;padding:22px 26px 8px}h2{font-size:22px;margin:0}.summary,.status,.hint{color:#64748b}.summary{margin:7px 0}.badge{padding:7px 12px;background:#edf3ff;color:#245dc9;border-radius:20px}.status{justify-content:space-between;padding:6px 26px;min-height:30px;font-size:12px}.hint{padding:0 26px 12px;margin:8px 0 0;font-size:12px}#empty{padding:16px 26px;background:#f6f8fc;margin:0}#scroll{height:min(52vh,520px);overflow:auto;border-top:1px solid #e0e5ee}#timeline{height:2160px;position:relative;margin-right:16px}.hour{position:absolute;left:76px;right:0;height:90px;border-top:1px solid #e6eaf0}.hour:after{content:'';position:absolute;top:44px;width:100%;border-top:1px dashed #eff1f5}.hour span{position:absolute;right:calc(100% + 12px);color:#7c8798;font-size:11px;white-space:nowrap}#events{position:absolute;left:88px;right:4px;top:0;bottom:0}.event{position:absolute;border:0;border-left:3px solid var(--accent);border-radius:5px;background:var(--bg);color:#243047;padding:6px 10px;font-size:13px;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.event:hover{background:var(--bg);filter:brightness(.96)}.event small{margin-left:10px}#now{position:absolute;left:76px;right:0;border-top:2px solid #ea4335;pointer-events:none;z-index:2}dialog{border:1px solid #d5dce8;border-radius:14px;padding:24px;width:min(560px,90vw);max-height:75vh;color:#243047}dialog::backdrop{background:#17233955}dialog ul{padding-left:18px;line-height:1.7;overflow-wrap:anywhere}dialog button{float:right}.error{color:#b42318}footer{padding:14px 0;color:#64748b;font-size:12px}@media(max-width:650px){main{padding:12px}form{margin-left:0;flex-wrap:wrap}.badge{display:none}.status{flex-direction:column;align-items:start;gap:4px}h2{font-size:18px}}
+</style>
+</head>
+<body>
+<main>
+<header>
+<div><span class="eyebrow">ON YOUR COMPUTER</span><h1>Daily Activities</h1></div>
+<nav aria-label="Day navigation"><button id="today">Today</button><button id="prev" aria-label="Previous day">‹</button><button id="next" aria-label="Next day">›</button></nav>
+<form id="form"><label for="date">Date</label><input id="date" type="date" required><button>Apply</button><button id="refresh" type="button">Refresh</button></form>
+</header>
+<section class="calendar" aria-label="Daily calendar">
+<div class="heading"><div><h2 id="heading"></h2><p class="summary" id="summary"></p></div><span class="badge">Local day view</span></div>
+<div class="status"><span id="status" role="status">Loading local records…</span><span id="updated"></span></div>
+<p class="hint">5-minute samples · Same-app observations grouped · Hover or click for titles · Estimated durations · Local time</p>
+<p id="empty" hidden>No activities recorded for this date.</p>
+<div id="scroll" tabindex="0" aria-label="Scrollable 24-hour timeline"><div id="timeline"><div id="hours"></div><div id="events"></div><div id="now" hidden></div></div></div>
+</section>
+<footer>No account or server. Records stay in this folder on your computer.</footer>
+</main>
+<dialog id="details"><button id="close" aria-label="Close details">Close</button><h2 id="detail-app"></h2><p id="detail-time"></p><ul id="detail-titles"></ul></dialog>
+<script>
+const SAMPLE_MS = 300000, SCALE = 1.5;
+const byId = id => document.getElementById(id);
+let data = {days:{}}, selected = '', loading = false, initialScroll = true;
+const key = date => date.getFullYear()+'-'+String(date.getMonth()+1).padStart(2,'0')+'-'+String(date.getDate()).padStart(2,'0');
+const clock = date => date.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
+
+function coalesce(records) {
+    const blocks = [];
+    const ordered = records.map(record => ({...record,time:new Date(record.recorded_at.replace(' ','T'))}))
+        .filter(record => !isNaN(record.time)).sort((a,b)=>a.time-b.time);
+    for (const record of ordered) {
+        const last = blocks[blocks.length-1];
+        if (last && last.app === record.app && record.time-last.last <= SAMPLE_MS+60000) {
+            last.last=record.time;
+            last.observations.push(record);
+        } else blocks.push({app:record.app,start:record.time,last:record.time,observations:[record]});
+    }
+    blocks.forEach((block,index)=>block.end=new Date(Math.min(+block.last+SAMPLE_MS,blocks[index+1] ? +blocks[index+1].start : Infinity)));
+    return blocks;
+}
+
+function showDetails(block) {
+    byId('detail-app').textContent=block.app;
+    byId('detail-time').textContent=clock(block.start)+'–'+clock(block.end)+' · estimated interval';
+    byId('detail-titles').replaceChildren();
+    for (const observation of block.observations) {
+        const li=document.createElement('li');
+        li.textContent=clock(observation.time)+' — '+(observation.title || 'No window title');
+        byId('detail-titles').append(li);
+    }
+    byId('details').showModal();
+}
+
+function render() {
+    const records=data.days[selected] || [], blocks=coalesce(records);
+    byId('heading').textContent=new Date(selected+'T12:00:00').toLocaleDateString([], {weekday:'long',month:'long',day:'numeric',year:'numeric'});
+    byId('summary').textContent=blocks.length+' app blocks · '+records.length+' observations';
+    byId('empty').hidden=records.length!==0;
+    byId('events').replaceChildren();
+    let cluster=[], laneEnds=[], bottom=-1;
+    function finish(){cluster.forEach(item=>item.lanes=laneEnds.length);cluster=[];laneEnds=[];}
+    const layouts=blocks.map(block=>{
+        const top=(block.start.getHours()*60+block.start.getMinutes()+block.start.getSeconds()/60)*SCALE;
+        const height=Math.min(2160-top,Math.max(32,(block.end-block.start)/60000*SCALE));
+        if(top>=bottom) finish();
+        let lane=laneEnds.findIndex(end=>end<=top);
+        if(lane===-1) lane=laneEnds.length;
+        laneEnds[lane]=top+height;
+        bottom=Math.max(...laneEnds);
+        const item={block,top,height,lane};cluster.push(item);return item;
+    });
+    finish();
+    const colors=[['#2563eb','#e8f0fe'],['#188038','#e6f4ea'],['#9334e6','#f3e8fd'],['#c26401','#fef1db']];
+    for(const {block,top,height,lane,lanes} of layouts){
+        const element=document.createElement('button');element.className='event';element.type='button';
+        const hash=Array.from(block.app || '').reduce((sum,char)=>sum+char.charCodeAt(0),0);
+        const [accent,bg]=colors[hash%colors.length];
+        Object.assign(element.style,{top:top+'px',height:height+'px',left:(lane*100/lanes)+'%',width:'calc('+(100/lanes)+'% - 5px)'});
+        element.style.setProperty('--accent',accent);element.style.setProperty('--bg',bg);
+        const strong=document.createElement('strong');strong.textContent=block.app;
+        const small=document.createElement('small');small.textContent=clock(block.start)+'–'+clock(block.end);
+        element.append(strong,small);
+        element.title=block.app+'\n'+small.textContent+' (estimated)\n'+block.observations.map(r=>clock(r.time)+' — '+(r.title || 'No window title')).join('\n');
+        element.addEventListener('click',()=>showDetails(block));
+        byId('events').append(element);
+    }
+    const now=new Date();byId('now').hidden=selected!==key(now);
+    byId('now').style.top=(now.getHours()*60+now.getMinutes())*SCALE+'px';
+    if(initialScroll){
+        const minutes=selected===key(now)?now.getHours()*60:blocks.length?blocks[0].start.getHours()*60:480;
+        byId('scroll').scrollTop=Math.max(0,(minutes-30)*SCALE);initialScroll=false;
+    }
+}
+
+function reloadData(){
+    if(loading)return;
+    loading=true;
+    const script=document.createElement('script');
+    script.src='activities-data.js?t='+Date.now();
+    const cleanup=()=>{loading=false;script.remove();};
+    script.onload=()=>{
+        if(!window.ACTIVITY_DATA || !window.ACTIVITY_DATA.days){failed();return;}
+        data=window.ACTIVITY_DATA;
+        byId('status').className='';byId('status').textContent='Reading local records · checks every 30 seconds';
+        byId('updated').textContent='Last collected: '+new Date(data.updated_at).toLocaleString();
+        cleanup();render();
+    };
+    function failed(){
+        byId('status').className='error';
+        byId('status').textContent='No readable data file yet. Run ./run.sh and check collector.log. Keeping any loaded records.';
+        cleanup();render();
+    }
+    script.onerror=failed;
+    document.body.append(script);
+}
+
+function applyDate(){
+    if(!byId('date').value)return;
+    initialScroll=selected!==byId('date').value;
+    selected=byId('date').value;render();reloadData();
+}
+for(let hour=0;hour<24;hour++){
+    const line=document.createElement('div');line.className='hour';line.style.top=hour*90+'px';
+    const label=document.createElement('span');label.textContent=(hour%12 || 12)+(hour<12?' AM':' PM');
+    line.append(label);byId('hours').append(line);
+}
+byId('form').addEventListener('submit',event=>{event.preventDefault();applyDate();});
+byId('refresh').addEventListener('click',reloadData);
+byId('today').addEventListener('click',()=>{byId('date').value=key(new Date());applyDate();});
+for(const id of ['prev','next'])byId(id).addEventListener('click',()=>{
+    const date=new Date(selected+'T12:00:00');date.setDate(date.getDate()+(id==='next'?1:-1));byId('date').value=key(date);applyDate();
+});
+byId('close').addEventListener('click',()=>byId('details').close());
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)reloadData();});
+setInterval(()=>{if(!document.hidden)reloadData();},30000);
+byId('date').value=key(new Date());selected=byId('date').value;render();reloadData();
+</script>
+</body>
+</html>
