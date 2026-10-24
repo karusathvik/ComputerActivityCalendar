@@ -1,3 +1,33 @@
+# Python environments and generated files
 .venv/
+venv/
 __pycache__/
+*.py[cod]
+
+# Maven and IntelliJ build output
+/target/
+/out/
+/.idea/
+*.iml
+
+# Local environment variables and secrets
 .env
+.env.*
+!.env.example
+!.env.sample
+/secrets/
+/credentials/
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+
+# Local database credentials
+/WebContent/META-INF/context.xml
+/src/main/java/Parameters.java
+
+# Local logs and macOS metadata
+*.log
+.DS_Store
